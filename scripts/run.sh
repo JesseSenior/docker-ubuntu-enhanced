@@ -18,8 +18,13 @@ else
 fi
 
 if [[ "${opt}" == "y" ]]; then
-    echo -e "INFO: Trying to build ubuntu-enhanced"
-    ${SCRIPT_PATH}/build.sh
+    read -p "- Ubuntu Version [latest]: " version
+    echo -e "INFO: Trying to build ubuntu-enhanced(Ubuntu:${version:-latest})"
+    if [[ -n "${version}" ]]; then
+        ${SCRIPT_PATH}/build.sh --version $version
+    else
+        ${SCRIPT_PATH}/build.sh
+    fi
 elif [[ "$(docker images -q ubuntu-enhanced 2>/dev/null)" == "" ]]; then
     echo -e "${C_ERROR}ERROR: ubuntu-enhanced not exist!${C_OFF}"
     exit 1

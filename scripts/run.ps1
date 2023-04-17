@@ -20,8 +20,13 @@ if ("$(docker images -q ubuntu-enhanced)" -eq "") {
 }
 
 if ($opt -eq "y") {
-    Write-Host "INFO: Trying to build ubuntu-enhanced"
-    & "$SCRIPT_PATH/build.ps1"
+    $version = Read-Host "- Ubuntu Version [latest]: "
+    Write-Host "INFO: Trying to build ubuntu-enhanced(Ubuntu:$($version -or "latest"))"
+    if ($version) {
+        & "$SCRIPT_PATH/build.ps1" --version $version
+    } else {
+        & "$SCRIPT_PATH/build.ps1"
+    }
 } elseif ("$(docker images -q ubuntu-enhanced)" -eq "") {
     Write-Host "${C_ERROR}ERROR: ubuntu-enhanced not exist!${C_OFF}"
     exit 1

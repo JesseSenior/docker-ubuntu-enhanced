@@ -1,4 +1,5 @@
-FROM ubuntu:22.10
+ARG version=latest
+FROM ubuntu:$version
 
 RUN apt update \
     && apt install -y tzdata curl; \
