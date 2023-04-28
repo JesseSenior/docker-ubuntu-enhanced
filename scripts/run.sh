@@ -27,8 +27,14 @@ else
 fi
 
 if [[ "${opt}" == "y" ]]; then
+    echo -e "${C_INFO}INFO: Clean up the dangling images${C_OFF}"
+    docker image prune -a -f --filter "label=container.parent-name=ubuntu-enhanced"
     echo -e "${C_INFO}INFO: Trying to build ubuntu-enhanced:$version${C_OFF}"
     ${SCRIPT_PATH}/build.sh --version $version
+    if [[ $? -ne 0 ]]; then
+        echo -e "${C_ERROR}ERROR: Build ubuntu-enhanced:$version failed. Exiting...${C_OFF}"
+        exit 1
+    fi
 else
     echo -e "${C_WARN}WARNING: Skipping build.${C_OFF}"
 fi

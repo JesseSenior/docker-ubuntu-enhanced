@@ -1,6 +1,8 @@
 ARG version=latest
 FROM ubuntu:$version
 
+LABEL "container.parent-name"="ubuntu-enhanced"
+
 RUN apt update \
     && apt install -y tzdata curl; \
     apt clean;

@@ -4,3 +4,4 @@ if ($args[0] -eq "--version" -and $args[1]) {
 } else {
     docker build -t ubuntu-enhanced:latest $PSScriptRoot/..
 }
+exit $LASTEXITCODE

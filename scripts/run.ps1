@@ -33,8 +33,14 @@ else {
 }
 
 if ($opt -eq "y") {
+    Write-Host -ForegroundColor $C_INFO "INFO: Clean up the dangling images"
+    docker image prune -a -f --filter "label=container.parent-name=ubuntu-enhanced"
     Write-Host -ForegroundColor $C_INFO "INFO: Trying to build ubuntu-enhanced:$version"
     & "$SCRIPT_PATH/build.ps1" --version $version
+    if (-not $?) {
+        Write-Host -ForegroundColor $C_ERROR "ERROR: Build ubuntu-enhanced:$version failed. Exiting..."
+        exit 1
+    }
 }
 else {
     Write-Host -ForegroundColor $C_WARN "WARNING: Skipping build..."

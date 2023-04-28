@@ -7,3 +7,4 @@ if [[ "$1" == "--version" && -n "$2" ]]; then
 else
     docker build -t ubuntu-enhanced:latest ${SCRIPT_PATH}/..
 fi
+exit $?
