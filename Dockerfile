@@ -15,9 +15,12 @@ RUN mkdir /run/sshd; \
     apt clean; \
     mkdir /root/.ssh;
 
-COPY --chmod=700 base/entry_point.sh /usr/local/bin/
-COPY --chmod=700 base/utilities.sh /usr/local/bin/
-RUN echo "source /usr/local/bin/utilities.sh" >>/root/.bashrc
+COPY --chmod=600 base/root /root
+COPY --chmod=700 base/usr/local/bin/* /usr/local/bin/
+
+RUN echo 'export LANG="C.UTF-8"' >>/root/.bashrc; \
+    echo 'export LC_ALL="C.UTF-8"' >>/root/.bashrc; \
+    echo "source /usr/local/bin/utilities.sh" >>/root/.bashrc;
 
 EXPOSE 22
 
