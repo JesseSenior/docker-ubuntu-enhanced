@@ -1,82 +1,90 @@
 #!/bin/bash
 SCRIPT_PATH="$(dirname -- "${BASH_SOURCE[0]}")"
 
-C_OFF='\033[0m'
-C_INFO='\033[0;34m'
-C_ERROR='\033[0;31m'
-C_WARN='\033[0;33m'
+source utilities.sh
 
-# Specify Ubuntu Version
-echo -e "${C_INFO}INFO: Preparing ubuntu-enhanced image:${C_OFF}"
-read -p "  - Ubuntu Version [latest]: " version
+# Show welcome message
+welcome_message
 
-# Ensure Build image's existence
-unset opt
-version=${version:-"latest"}
+### 1. Specify Ubuntu Version ###
+psec "Preparing ubuntu-enhanced image:"
+get_input "  - Ubuntu Version" "latest" version
+
+### 2. Build ubuntu-enhanced ###
 if [[ "$(docker images -q ubuntu-enhanced:$version 2>/dev/null)" == "" ]]; then
-    echo -e "${C_WARN}WARNING: ubuntu-enhanced:$version does not exist.${C_OFF}"
-    read -p "Build it first? (y/n) [y]: " opt
-    if [[ "${opt:="y"}" != "y" ]]; then
-        echo -e "${C_ERROR}ERROR: ubuntu-enhanced:$version not exist!${C_OFF}"
+    pwarn "ubuntu-enhanced:$version does not exist."
+    get_yn "Build it first?" "y"
+    opt=$?
+    if [[ "$opt" == "0" ]]; then
+        perr "ubuntu-enhanced:$version is required but not exist!"
         exit 1
     fi
+elif [[ "$(docker inspect -f '{{ index .Config.Labels "container.build-version" }}' ubuntu-enhanced:$version)" != "$version" || "$(docker inspect -f '{{ index .Config.Labels "container.build-version" }}' ubuntu-enhanced:$version)" == "Unknown" ]]; then
+    pwarn "ubuntu-enhanced:$version exist but may be outdated."
+    get_yn "Build it again?" "y"
+    opt=$?
 else
-    echo -e "${C_WARN}WARNING: ubuntu-enhanced:$version already exist.${C_OFF}"
-    read -p "Build it again? (y/n) [n]: " opt
-    opt=${opt:-"n"}
+    pinfo "ubuntu-enhanced:$version already exist."
+    get_yn "Build it again?" "n"
+    opt=$?
 fi
 
-if [[ "${opt}" == "y" ]]; then
-    echo -e "${C_INFO}INFO: Clean up the dangling images${C_OFF}"
-    docker image prune -a -f --filter "label=container.parent-name=ubuntu-enhanced"
-    echo -e "${C_INFO}INFO: Trying to build ubuntu-enhanced:$version${C_OFF}"
-    ${SCRIPT_PATH}/build.sh --version $version
-    if [[ $? -ne 0 ]]; then
-        echo -e "${C_ERROR}ERROR: Build ubuntu-enhanced:$version failed. Exiting...${C_OFF}"
+# Build image
+if [[ "$opt" == "1" ]]; then
+    pinfo "Clean up the dangling images."
+    docker image prune -a -f --filter "label=container.parent-name=ubuntu-enhanced" --filter "label=container.version=$version"
+    pinfo "Attempt to build ubuntu-enhanced:$version"=
+    if ! ${SCRIPT_PATH}/build.sh --version $version; then
+        perr "Failed to build ubuntu-enhanced:$version!"
         exit 1
     fi
+    pinfo "Build ubuntu-enhanced:$version succeeded."
 else
-    echo -e "${C_WARN}WARNING: Skipping build.${C_OFF}"
+    pwarn "Build has been skipped."
 fi
 
-# Get run parameters
-echo -e "${C_INFO}INFO: Setting up parameters:${C_OFF}"
+### 3. Set up container's parameters ###
+psec "Setting up parameters:"
 args="-d "
 
-while [ -z "${NAME}" ]; do
-    read -p "  - Container Name: " NAME
-done
+get_input "  - Container Name" NAME
 args="${args}--name '${NAME}' "
 
-read -p "  - Root Password [<RANDOM_VALUE>]: " ROOT_PASSWORD
-[ -n "${ROOT_PASSWORD}" ] && args="${args}-e ROOT_PASSWORD='${ROOT_PASSWORD}' "
+get_input "  - Root Password" "<RANDOM_VALUE>" ROOT_PASSWORD
+[ "$ROOT_PASSWORD" != "<RANDOM_VALUE>" ] && args="${args}-e ROOT_PASSWORD='${ROOT_PASSWORD}' "
 
-unset opt
-read -p "  - SSH Authorized Key (file/str) [str]: " opt
-opt=${opt:-"str"}
+get_choice "  - SSH Authorized Key" "file/str" "str" opt
 
 if [[ "$opt" == "str" ]]; then
-    read -p "    + Public Key ['']: " AUTHORIZED_KEY
+    get_input "    + Public Key" "''" AUTHORIZED_KEY
+    [ "$AUTHORIZED_KEY" == "''" ] && unset AUTHORIZED_KEY
 elif [[ "$opt" == "file" ]]; then
-    read -p "    + Public Key Path [~/.ssh/id_rsa.pub]: " AUTHORIZED_KEY_PATH
-    AUTHORIZED_KEY_PATH=${AUTHORIZED_KEY_PATH:-"~/.ssh/id_rsa.pub"}
-    AUTHORIZED_KEY=$(cat $AUTHORIZED_KEY_PATH 2>/dev/null)
+    [[ "$(</proc/sys/kernel/osrelease)" == *WSL2 ]] && pwarn "WSL2 environment detected, path will be converted."
+    get_input "    + Public Key Path" "~/.ssh/id_rsa.pub" AUTHORIZED_KEY_PATH
+
+    # Detect WSL2 Environment
+    if [[ "$(</proc/sys/kernel/osrelease)" == *WSL2 ]]; then
+        AUTHORIZED_KEY_PATH=${AUTHORIZED_KEY_PATH/\~/"$(cmd.exe /c "<nul set /p=%UserProfile%" 2>/dev/null)"}
+        AUTHORIZED_KEY_PATH=$(wslpath -a -u ${AUTHORIZED_KEY_PATH})
+    fi
+    AUTHORIZED_KEY=$(cat ${AUTHORIZED_KEY_PATH})
 fi
 
 [ -n "${AUTHORIZED_KEY}" ] && args="${args}-e AUTHORIZED_KEY='${AUTHORIZED_KEY}' "
 
-read -p "  - Timezone [Asia/Shanghai]: " TZ
-[ -n "${TZ}" ] && args="${args}-e TZ='${TZ}' "
+get_input "  - Timezone" "Asia/Shanghai" TZ
+[ "$TZ" != "Asia/Shanghai" ] && args="${args}-e TZ='${TZ}' "
 
-read -p "  - Exposed Port [2233]: " PORT
-args="${args}-p ${PORT:=2233}:22 "
+get_input "  - Exposed Port" "2233" PORT
+args="${args}-p ${PORT}:22 "
 
-read -p "  - Other Parameters (example:'--gpus all') ['']: " OPP
-[ -n "${OPP}" ] && args="${args}${OPP} "
+get_input "  - Other Parameters (example:'--gpus all')" "''" OPP
+[ "${OPP}" != "''" ] && args="${args}${OPP} "
 
-echo -e "${C_INFO}INFO: Docker command:${C_OFF}"
-echo -e "  - docker run ${args} ubuntu-enhanced:$version"
+psec "Docker command:"
 
-read -p "Press anything to run."
+pnone "  - docker run ${args} ubuntu-enhanced:$version"
+
+read -p "Press anything to start."
 
 eval "docker run ${args} ubuntu-enhanced:$version"

@@ -6,6 +6,7 @@
 
 - [x] 支持SSH远程访问（密码/公钥）
 - [x] apt更换为国内镜像源（基于：<https://github.com/SuperManito/LinuxMirrors>）
+- [x] 支持一键配置Miniconda环境
 - [ ] ...
 
 ## 使用方法

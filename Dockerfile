@@ -1,7 +1,10 @@
 ARG version=latest
+ARG build_version=Unknown
 FROM ubuntu:$version
 
 LABEL "container.parent-name"="ubuntu-enhanced"
+LABEL "container.version"="$version"
+LABEL "container.build-version"="$build_version"
 
 RUN apt update \
     && apt install -y tzdata curl unzip; \
@@ -13,7 +16,8 @@ RUN mkdir /run/sshd; \
     sed -i 's/^#\(PermitRootLogin\) .*/\1 yes/' /etc/ssh/sshd_config; \
     sed -i 's/^\(UsePAM yes\)/# \1/' /etc/ssh/sshd_config; \
     apt clean; \
-    mkdir /root/.ssh;
+    mkdir /root/.ssh; \
+    mkdir /root/.config;
 
 COPY --chmod=600 base/root /root
 COPY --chmod=700 base/usr/local/bin/* /usr/local/bin/
