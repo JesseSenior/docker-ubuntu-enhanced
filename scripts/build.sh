@@ -1,5 +1,8 @@
 #!/bin/bash
-SCRIPT_PATH="$(dirname -- "${BASH_SOURCE[0]}")"
+SCRIPT_PATH="$(
+    cd -- "$(dirname "$0")" >/dev/null 2>&1
+    pwd -P
+)"
 
 VERSION="latest"
 args=""
@@ -13,7 +16,7 @@ while [[ $# -gt 0 ]]; do
         shift # past value
         ;;
     --build-version)
-        args="$args --build-arg build_version=$2"
+        args="$args --build-arg build_version='$2'"
         shift # past argument
         shift # past value
         ;;
@@ -27,5 +30,5 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-eval "docker build -t ubuntu-enhanced:$VERSION ${SCRIPT_PATH}/.. ${args}"
+eval "docker build -t ubuntu-enhanced:$VERSION ${args} ${SCRIPT_PATH}/.."
 exit $?

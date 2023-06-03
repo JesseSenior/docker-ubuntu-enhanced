@@ -1,10 +1,12 @@
 ARG version=latest
-ARG build_version=Unknown
 FROM ubuntu:$version
 
-LABEL "container.parent-name"="ubuntu-enhanced"
-LABEL "container.version"="$version"
-LABEL "container.build-version"="$build_version"
+ARG version=latest
+ARG build_version=Unknown
+
+LABEL container.parent-name="ubuntu-enhanced" \
+    container.version="$version" \
+    container.build-version="$build_version"
 
 RUN apt update \
     && apt install -y tzdata curl unzip; \

@@ -5,32 +5,31 @@ C_INFO='\033[0;34m'
 C_ERROR='\033[0;31m'
 C_WARN='\033[0;33m'
 
-get_version() {
+get_build_version() {
+    declare -n ret=$1
+    ret="Unknown"
+
     if !command -v git >/dev/null 2>&1; then
-        echo "Unknown (Git not installed)"
-        version="Unknown"
+        ret="Unknown (Git not installed)"
         return
     fi
 
     if ! git rev-parse --git-dir >/dev/null 2>&1; then
-        echo "Unknown (No version information)"
-        version="Unknown"
+        ret="Unknown (No version information)"
         return
     fi
 
-    version=$(git describe 2>&1) 
+    ret=$(git describe 2>&1)
     if [ $? -ne 0 ]; then
-        echo "Unknown (Failed to get version information)"
-        version="Unknown"
+        ret="Unknown (Failed to get version information)"
         return
     fi
-    git diff-index --quiet HEAD -- || version="${version}-changed($(date +%s))"
-
-    echo $version
+    [ -z "$(git status --porcelain=v1 2>/dev/null)" ] || ret="${ret}-changed($(date +%s))"
 }
 
 welcome_message() {
     clear
+    get_build_version build_version
     echo '=================================================='
     echo '       ██████╗       ██╗   ██╗      ███████╗      '
     echo '       ██╔══██╗      ██║   ██║      ██╔════╝      '
@@ -44,8 +43,8 @@ welcome_message() {
     echo ' - Author: Jesse Senior                           '
     echo ' - License: MIT License                           '
     echo ' - Current Version:                               '
-    echo "   + $(get_version)                               "
-    #echo '=================================================='
+    echo "   + $build_version                               "
+    [[ $build_version = Unknown* ]] && build_version='Unknown'
 }
 
 pnone() {
