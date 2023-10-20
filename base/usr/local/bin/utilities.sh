@@ -1,7 +1,7 @@
 #!/bin/bash
 
 change_mirrors() {
-    bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/ChangeMirrors.sh)
+    bash <(curl -sSL https://linuxmirrors.cn/main.sh)
 }
 
 init_miniconda() {
@@ -13,6 +13,6 @@ init_miniconda() {
     pip install pqi
 }
 
-init_essentials() {
-    apt install -y sudo git vim tmux
+init_essential() {
+    apt install -y sudo git vim tmux build-essential
 }

@@ -15,11 +15,11 @@ get_build_version() {
     fi
 
     if ! git rev-parse --git-dir >/dev/null 2>&1; then
-        ret="Unknown (No version information)"
+        ret="Unknown (No git repository)"
         return
     fi
 
-    ret=$(git describe 2>&1)
+    ret=$(git describe --tags 2>&1)
     if [ $? -ne 0 ]; then
         ret="Unknown (Failed to get version information)"
         return
