@@ -22,7 +22,7 @@ change_mirrors() {
 }
 
 change_mirrors_python() {
-    cat <<'EOF' > ~/.condarc
+    cat <<'EOF' >~/.condarc
 channels:
   - conda-forge
   - nodefaults
@@ -41,7 +41,9 @@ EOF
 }
 
 install_miniconda() {
-    download_url_to_file https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-$(uname -m).sh /tmp/InstallMiniconda.sh
+    [[ ! -v MINICONDA_MIRROR ]] && MINICONDA_MIRROR="https://repo.anaconda.com/miniconda/"
+    [[ "${MINICONDA_MIRROR}" != */ ]] && MINICONDA_MIRROR="${MINICONDA_MIRROR}/"
+    download_url_to_file "${MINICONDA_MIRROR}Miniconda3-latest-Linux-$(uname -m).sh" /tmp/InstallMiniconda.sh
     chmod +x /tmp/InstallMiniconda.sh
     bash /tmp/InstallMiniconda.sh -b
     eval "$(/root/miniconda3/bin/conda shell.bash hook)"
@@ -50,7 +52,9 @@ install_miniconda() {
 }
 
 install_mambaconda() {
-    download_url_to_file "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh" /tmp/InstallMambaforge.sh
+    [[ ! -v MAMBACONDA_MIRROR ]] && MAMBACONDA_MIRROR="https://github.com/conda-forge/miniforge/releases/latest/download/"
+    [[ "${MAMBACONDA_MIRROR}" != */ ]] && MAMBACONDA_MIRROR="${MAMBACONDA_MIRROR}/"
+    download_url_to_file "${MAMBACONDA_MIRROR}Mambaforge-$(uname)-$(uname -m).sh" /tmp/InstallMambaforge.sh
     chmod +x /tmp/InstallMambaforge.sh
     bash /tmp/InstallMambaforge.sh -b
     eval "$(/root/mambaforge/bin/conda shell.bash hook)"
@@ -58,7 +62,7 @@ install_mambaconda() {
 }
 
 install_essential() {
-    apt install -y sudo git vim tmux aria2 build-essential
+    apt install -y sudo git vim aria2 build-essential
 }
 
 quick_init() {

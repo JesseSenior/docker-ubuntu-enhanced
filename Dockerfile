@@ -9,7 +9,7 @@ LABEL container.parent-name="ubuntu-enhanced" \
     container.build-version="$build_version"
 
 RUN apt update \
-    && apt install -y tzdata curl unzip;
+    && apt install -y tzdata curl unzip tmux;
 
 # sshd
 RUN mkdir /run/sshd; \
